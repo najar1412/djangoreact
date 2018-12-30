@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from customers import views
 from django.conf.urls import url
 
@@ -22,6 +22,7 @@ from customers import views
 
 
 urlpatterns = [
+    path('', include('splash.urls')),
     path('admin/', admin.site.urls),
     url(r'^api/customers/$', views.customers_list),
     url(r'^api/customers/(?P<pk>[0-9]+)$', views.customers_detail),

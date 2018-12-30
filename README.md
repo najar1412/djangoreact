@@ -29,3 +29,18 @@ testing django/react apps
 ```
  # TODO
 ```
+
+### Init React
+
+```
+ # TODO
+ # npx create-react-app frontend
+```
+
+ inside the react `frontend` folder
+
+```
+ npm install axios --save
+ npm install --save react-router-dom
+ npm install babylonjs --save
+```
