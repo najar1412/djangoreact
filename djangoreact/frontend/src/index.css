@@ -19,13 +19,14 @@ code {
   flex-direction: row;
   background-color:red;
   width: 100%;
+  height: 100%;
 }
 #sidebar {
   background-color: blue;
   position: absolute;
   right: 0;
   width: 300px;
-  height: inherit;
+  height: auto;
 }
 #renderCanvas {
   display: inherit;

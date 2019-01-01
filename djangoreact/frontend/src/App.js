@@ -11,6 +11,8 @@ import './App.css';
 
 const BaseLayout = () => (
   /*
+
+  
   <div className="container-fluid">
   
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
