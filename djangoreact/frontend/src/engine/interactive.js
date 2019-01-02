@@ -9,155 +9,121 @@ class Interactive extends Component {
     testFunction(){}
 
     render() {
+        // GLOBAL
+        const LOC_STATIC = `${process.env.PUBLIC_URL}`;
+        const LOC_MESH = `${process.env.PUBLIC_URL}/mesh/`;
 
+        // BIND ENGINE TO DOM ELEMENT
         var canvas = document.getElementById("renderCanvas"); // Get the canvas element 
         var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-        /******* Add the create scene function ******/
-        var createScene = function () {
-            var scene = new BABYLON.Scene(engine);
+        // HELPERS
+        var toneMap = function(scene, active) {
+            if (active) {
+                scene.imageProcessingConfiguration.toneMappingEnabled = true;
+                // scene.imageProcessingConfiguration.contrast = 1.6;
+                scene.imageProcessingConfiguration.exposure = 3;
+            }
+            
+        };
 
-            // scene.imageProcessingConfiguration.contrast = 1.6;
-            // scene.imageProcessingConfiguration.exposure = 0.6;
-            // scene.imageProcessingConfiguration.toneMappingEnabled = true;
-        
-            // Camera
-            // Parameters: alpha, beta, radius, target position, scene
-    var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, new BABYLON.Vector3(0, 0, 0), scene);
-
-    // Positions the camera overwriting alpha, beta, radius
-        camera.setPosition(new BABYLON.Vector3(0, 0, 20));
-    
-    // This attaches the camera to the canvas
-        camera.attachControl(canvas, true);
-        
-            // Light
-            // var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-            // light.intensity = 0.7;
-
-            var light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(20, -20, -20), scene);
-            light.intensity = 7;
-            // light.setTarget(new BABYLON.Vector3.Zero());
-
-            var light3 = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-        
-            // Skybox
+        var skyBox = function(scene) {
+            // SKYBOX
             var box = BABYLON.Mesh.CreateBox('SkyBox', 1000, scene, false, BABYLON.Mesh.BACKSIDE);
             box.material = new BABYLON.SkyMaterial('sky', scene);
-            box.material.luminance = 1;
-            
-
+            // SKYBOX - SKYMATERIAL CTRL
+            // box.material.luminance = 1;
             box.material.inclination = 0; // The solar inclination, related to the solar azimuth in interval [0, 1]
             //box.material.azimuth = 0.42; // The solar azimuth in interval [0, 1]
-        
-            // Reflection probe
-            var rp = new BABYLON.ReflectionProbe('ref', 512, scene);
-            rp.renderList.push(box);
 
-            // Shadows
-            var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
-            shadowGenerator.bias = 0.000005;
-            shadowGenerator.setDarkness(0.04);
-            shadowGenerator.forceBackFacesOnly = true
+            return box;
+        };
 
-            // shadowGenerator.useBlurExponentialShadowMap = true;
-            // shadowGenerator.useVarianceShadowMap = true;
+        var sceneWideShadowSettings = function(shadowGen) {
+            shadowGen.bias = 0.000005;
+            shadowGen.setDarkness(0.1);
 
-            shadowGenerator.usePoissonSampling = true;
-            shadowGenerator.usePercentageCloserFiltering = true;
-            // shadowGenerator.useContactHardeningShadow = true
-            
-            
+            shadowGen.usePoissonSampling = true;
+            shadowGen.usePercentageCloserFiltering = true;
+            shadowGen.useContactHardeningShadow = true
+            shadowGen.forceBackFacesOnly = true
+        };
 
-            
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 5, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.wheelPrecision = 15;
+            camera.setPosition(new BABYLON.Vector3(0, 0, -20));
+            camera.attachControl(canvas, true);
 
-            // PBR
-            const texturesUrl = `${process.env.PUBLIC_URL}/textures/`;
-            var pbr_test = new BABYLON.PBRMaterial("pbr_test", scene);
-            pbr_test.albedoColor = new BABYLON.Color3(1, 1, 1);
-            pbr_test.reflectivityColor = new BABYLON.Color3(1.0, 1.0, 1.0);
-            pbr_test.microSurface = .1; // Let the texture controls the value 
-            // pbr_test.reflectionTexture = rp.cubeTexture;
-            // pbr_test.reflectivityTexture = new BABYLON.Texture(texturesUrl + "sg.png", scene);
-            // pbr_test.useMicroSurfaceFromReflectivityMapAlpha = true;
-            // pbr_test.backFaceCulling = false;
+            // ENV SETTINGS
+            toneMap(scene, true);
+            var skybox = skyBox(scene);
+            var envreflmap = new BABYLON.ReflectionProbe('ref', 512, scene);
+            envreflmap.renderList.push(skybox);
 
+            var sun = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-15, -15, 20), scene);
+            sun.intensity = 4;
+            var ambi = new BABYLON.HemisphericLight("ambi", new BABYLON.Vector3(0, -1, 0), scene);
+            ambi.diffuse = new BABYLON.Color3(.1, .1, .1);
+            ambi.intensity = 0.5;
 
+            var shadowGenerator = new BABYLON.ShadowGenerator(2048, sun);
+            sceneWideShadowSettings(shadowGenerator);
+
+            // PRESET MATERIALS
             var mDefaultWhite = new BABYLON.PBRSpecularGlossinessMaterial("mDefaultWhite", scene);
-            // mDefaultWhite.reflectionTexture = rp.cubeTexture;
             mDefaultWhite.diffuseColor = new BABYLON.Color3(.2, .2, .2);
-            mDefaultWhite.environmentTexture = rp.cubeTexture;
-            mDefaultWhite.glossiness = .2;
+            // mDefaultWhite.environmentTexture = envreflmap.cubeTexture;
+            mDefaultWhite.glossiness = 0;
 
-            var mDefaultGray = new BABYLON.PBRSpecularGlossinessMaterial("mDefaultGray", scene);
-            // mDefaultGray.reflectionTexture = rp.cubeTexture;
-            mDefaultGray.diffuseColor = new BABYLON.Color3(.2, .2, .2);
-            mDefaultGray.environmentTexture = rp.cubeTexture;
-            mDefaultGray.glossiness = .1;
-
-             
-             
-        
-            // Sphere
-            var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-            sphere.position.y = 1;
-
-            sphere.material = pbr_test;
-            shadowGenerator.getShadowMap().renderList.push(sphere);
-
-            const meshLoc = `${process.env.PUBLIC_URL}/mesh/`;
-
-            // The first parameter can be used to specify which mesh to import. Here we import all meshes
-            BABYLON.SceneLoader.ImportMesh("", meshLoc, "scheme_001.babylon", scene, function (newMeshes) {
+            // IMPORT/PROCESS MESHES
+            BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "scheme_001.gltf", scene, function (newMeshes) {
                 var i;
                 for (i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
-                    objName.material = pbr_test;
+                    // objName.material.environmentTexture = envreflmap;
                     
                     shadowGenerator.getShadowMap().renderList.push(objName);
                     objName.receiveShadows = true;
                 };
             });
 
-            BABYLON.SceneLoader.ImportMesh("", meshLoc, "ground_001.babylon", scene, function (newMeshes) {
+            BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "scheme_001_floor_001.gltf", scene, function (newMeshes) {
                 var i;
                 for (i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
-                    objName.material = mDefaultGray;
+                    shadowGenerator.getShadowMap().renderList.push(objName);
+                    objName.receiveShadows = true;
+                    // objName.material.environmentTexture = envreflmap.cubeTexture;
+                };
+            });
+
+            BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "ground_001.babylon", scene, function (newMeshes) {
+                var i;
+                for (i=0;i<newMeshes.length;i++) {
+                    var objName = scene.getMeshByName(newMeshes[i].name);
+                    objName.material = mDefaultWhite;
                     
                     // shadowGenerator.getShadowMap().renderList.push(objName);
                     objName.receiveShadows = true;
                 };
             });
 
-            
-
-            BABYLON.SceneLoader.ImportMesh("", meshLoc, "furniture_001.babylon", scene, function (newMeshes) {
+            BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "furniture_001.gltf", scene, function (newMeshes) {
                 var i;
+                console.log(newMeshes);
                 for (i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
-                    objName.material = pbr_test;
+                    // objName.material.environmentTexture = envreflmap.cubeTexture;
                     
                     shadowGenerator.getShadowMap().renderList.push(objName);
                     objName.receiveShadows = true;
                 };
             });
-            
 
-           
-            // shadowGenerator.useVarianceShadowMap = true;
-            
-            // var shadowGenerator2 = new BABYLON.ShadowGenerator(512, light2);
-            // shadowGenerator2.getShadowMap().renderList.push(torus);
-            // shadowGenerator2.getShadowMap().renderList.push(torus2);
-            // shadowGenerator2.useVarianceShadowMap = true;
-
-            
-        
             return scene;
         };
-
-
 
         /******* End of the create scene function ******/    
 
@@ -166,7 +132,6 @@ class Interactive extends Component {
         // Register a render loop to repeatedly render the scene
         engine.runRenderLoop(function () { 
                 scene.render();
-                console.log(' words');
         });
 
         // Watch for browser/canvas resize events

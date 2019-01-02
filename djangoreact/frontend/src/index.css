@@ -31,5 +31,6 @@ code {
 #renderCanvas {
   display: inherit;
   flex-direction: column;
-  width: inherit;
+  width: 100%;
+  height: 100%;
 }
