@@ -21,7 +21,7 @@ class Interactive extends Component {
         var toneMap = function(scene, active) {
             if (active) {
                 scene.imageProcessingConfiguration.toneMappingEnabled = true;
-                // scene.imageProcessingConfiguration.contrast = 1.6;
+                scene.imageProcessingConfiguration.contrast = 1.6;
                 scene.imageProcessingConfiguration.exposure = 3;
             }
             
@@ -41,19 +41,23 @@ class Interactive extends Component {
 
         var sceneWideShadowSettings = function(shadowGen) {
             shadowGen.bias = 0.000005;
-            shadowGen.setDarkness(0.1);
+            shadowGen.setDarkness(0.3);
 
             shadowGen.usePoissonSampling = true;
-            shadowGen.usePercentageCloserFiltering = true;
-            shadowGen.useContactHardeningShadow = true
-            shadowGen.forceBackFacesOnly = true
+            // shadowGen.usePercentageCloserFiltering = true;
+            // shadowGen.useContactHardeningShadow = true
+            // shadowGen.forceBackFacesOnly = true
         };
 
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);
+
             var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 5, new BABYLON.Vector3(0, 0, 0), scene);
             camera.wheelPrecision = 15;
-            camera.setPosition(new BABYLON.Vector3(0, 0, -20));
+            camera.minZ = 0;
+            camera.fov = 0.872665;
+            camera.setPosition(new BABYLON.Vector3(0, 1.2, -12));
+            camera.setTarget(new BABYLON.Vector3(0, 1.2, 0));
             camera.attachControl(canvas, true);
 
             // ENV SETTINGS
@@ -62,14 +66,28 @@ class Interactive extends Component {
             var envreflmap = new BABYLON.ReflectionProbe('ref', 512, scene);
             envreflmap.renderList.push(skybox);
 
+            // SUN
             var sun = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(-15, -15, 20), scene);
-            sun.intensity = 4;
+            sun.intensity = 3;
             var ambi = new BABYLON.HemisphericLight("ambi", new BABYLON.Vector3(0, -1, 0), scene);
             ambi.diffuse = new BABYLON.Color3(.1, .1, .1);
             ambi.intensity = 0.5;
 
+            // SCHEME LIGHTING
+            var bulb = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(3, 1.5, 0), scene);
+            bulb.intensity = 5;
+
+            var l_tree_bulb_ctl = .5;
+            var l_tree_bulb_001 = new BABYLON.PointLight("l_tree_bulb_001", new BABYLON.Vector3(-4, 1.8, -3), scene);
+            l_tree_bulb_001.intensity = l_tree_bulb_ctl;
+
+            // SHADOWS
             var shadowGenerator = new BABYLON.ShadowGenerator(2048, sun);
             sceneWideShadowSettings(shadowGenerator);
+
+            // var shadowGenerator_bulb = new BABYLON.ShadowGenerator(2048, bulb);
+            // sceneWideShadowSettings(shadowGenerator);
+
 
             // PRESET MATERIALS
             var mDefaultWhite = new BABYLON.PBRSpecularGlossinessMaterial("mDefaultWhite", scene);
@@ -85,20 +103,23 @@ class Interactive extends Component {
                     // objName.material.environmentTexture = envreflmap;
                     
                     shadowGenerator.getShadowMap().renderList.push(objName);
+                    // shadowGenerator_bulb.getShadowMap().renderList.push(objName);
                     objName.receiveShadows = true;
                 };
             });
 
             BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "scheme_001_floor_001.gltf", scene, function (newMeshes) {
+              
                 var i;
-                for (i=0;i<newMeshes.length;i++) {
+                    for (i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
-                    shadowGenerator.getShadowMap().renderList.push(objName);
                     objName.receiveShadows = true;
-                    // objName.material.environmentTexture = envreflmap.cubeTexture;
+                    shadowGenerator.getShadowMap().renderList.push(objName);
+                    bulb.excludedMeshes.push(objName);
+                    // shadowGenerator_bulb.getShadowMap().renderList.push(objName);
                 };
             });
-
+            
             BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "ground_001.babylon", scene, function (newMeshes) {
                 var i;
                 for (i=0;i<newMeshes.length;i++) {
@@ -111,9 +132,7 @@ class Interactive extends Component {
             });
 
             BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "furniture_001.gltf", scene, function (newMeshes) {
-                var i;
-                console.log(newMeshes);
-                for (i=0;i<newMeshes.length;i++) {
+                for (var i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
                     // objName.material.environmentTexture = envreflmap.cubeTexture;
                     
