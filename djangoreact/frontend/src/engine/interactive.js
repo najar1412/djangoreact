@@ -21,7 +21,7 @@ class Interactive extends Component {
         var toneMap = function(scene, active) {
             if (active) {
                 scene.imageProcessingConfiguration.toneMappingEnabled = true;
-                scene.imageProcessingConfiguration.contrast = 1.6;
+                scene.imageProcessingConfiguration.contrast = 2;
                 scene.imageProcessingConfiguration.exposure = 3;
             }
             
@@ -56,8 +56,8 @@ class Interactive extends Component {
             camera.wheelPrecision = 15;
             camera.minZ = 0;
             camera.fov = 0.872665;
-            camera.setPosition(new BABYLON.Vector3(0, 1.2, -12));
-            camera.setTarget(new BABYLON.Vector3(0, 1.2, 0));
+            camera.setPosition(new BABYLON.Vector3(4, 1.4, -12));
+            camera.setTarget(new BABYLON.Vector3(0, 1.4, 0));
             camera.attachControl(canvas, true);
 
             // ENV SETTINGS
@@ -109,10 +109,9 @@ class Interactive extends Component {
             });
 
             BABYLON.SceneLoader.ImportMesh("", LOC_MESH, "scheme_001_floor_001.gltf", scene, function (newMeshes) {
-              
-                var i;
-                    for (i=0;i<newMeshes.length;i++) {
+                for (var i=0;i<newMeshes.length;i++) {
                     var objName = scene.getMeshByName(newMeshes[i].name);
+                    console.log(objName)
                     objName.receiveShadows = true;
                     shadowGenerator.getShadowMap().renderList.push(objName);
                     bulb.excludedMeshes.push(objName);
@@ -140,6 +139,16 @@ class Interactive extends Component {
                     objName.receiveShadows = true;
                 };
             });
+
+            var parameters = {
+                // edge_blur: 1.5,
+                dof_focus_distance: 5,
+                dof_aperture: .3,
+                chromatic_aberration: .4
+                // etc.
+              };
+              
+              var lensEffect = new BABYLON.LensRenderingPipeline('lensEffects', parameters, scene, 1.0, camera);
 
             return scene;
         };
